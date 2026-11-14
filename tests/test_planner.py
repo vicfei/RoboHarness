@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-from roboharness.planner import CloudPlanner
+from roboharness.planner import CloudPlanner, validate_steps
 
 
 class TestPlanner(unittest.TestCase):
@@ -12,11 +12,11 @@ class TestPlanner(unittest.TestCase):
             self.assertEqual(p.providers, [])
 
     def test_schema_rejects_unknown_op(self):
-        p = CloudPlanner(providers=[])
-        with mock.patch.object(p, "_call", return_value=[{"op": "fly"}]):
-            with mock.patch.object(p, "_call", return_value=[{"op": "fly"}]):
-                with self.assertRaises(ValueError):
-                    p.plan("x")
+        with self.assertRaises(ValueError):
+            validate_steps([{"op": "fly"}])
+        with self.assertRaises(ValueError):
+            validate_steps("not-a-list")
+        self.assertEqual(validate_steps([{"op": "home"}]), [{"op": "home"}])
 
     def test_fallback_chain(self):
         calls = []

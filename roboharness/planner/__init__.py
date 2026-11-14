@@ -18,6 +18,16 @@ class PlanStep(dict):
     """单步原语: {"op": "pick", "target": "white_plug"} 等。"""
 
 
+def validate_steps(steps) -> list:
+    """计划 schema 校验：必须是列表且每步 op 合法。"""
+    if not isinstance(steps, list):
+        raise ValueError("plan not a list")
+    for s in steps:
+        if not isinstance(s, dict) or s.get("op") not in PRIMITIVES_SCHEMA:
+            raise ValueError("bad step %r" % (s,))
+    return steps
+
+
 class CloudPlanner:
     """VLM 规划器：任务文本(+场景摘要) -> PlanStep 列表。"""
 
@@ -83,10 +93,4 @@ class CloudPlanner:
         # 兼容 ```json 包裹
         if text.startswith("```"):
             text = text.split("```")[1].lstrip("json").strip()
-        steps = json.loads(text)
-        if not isinstance(steps, list):
-            raise ValueError("plan not a list")
-        for s in steps:
-            if s.get("op") not in PRIMITIVES_SCHEMA:
-                raise ValueError("unknown op %r" % s.get("op"))
-        return steps
+        return validate_steps(json.loads(text))
