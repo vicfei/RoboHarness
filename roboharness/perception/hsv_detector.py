@@ -34,12 +34,13 @@ class ColorSpec:
     aspect_max: float
     fill_min: float
     found_score: int  # >= 此分判 FOUND，之下判 UNCERTAIN
+    v_max: int = 255   # 亮度上限（暗色目标用）
 
     def mask(self, img_bgr: np.ndarray) -> np.ndarray:
         hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
         m = np.zeros(hsv.shape[:2], np.uint8)
         for lo, hi in self.hue_ranges:
-            m |= cv2.inRange(hsv, (lo, 0, self.v_min), (hi, self.s_max, 255))
+            m |= cv2.inRange(hsv, (lo, 0, self.v_min), (hi, self.s_max, self.v_max))
         m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
         m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
         return m
@@ -65,6 +66,22 @@ RED_BLOCK = ColorSpec(
     aspect_min=0.5, aspect_max=2.0,
     fill_min=0.40,
     found_score=2500,
+)
+
+# 黑色充电插头（11-15：暗低饱和方正块；暗桌面阴影噪声大，建议配合模板匹配）
+BLACK_PLUG = ColorSpec(
+    name="black_plug", hue_ranges=((0, 180),),
+    s_max=75, v_min=15, v_max=100,
+    area_min=450, area_max=3000, aspect_min=0.6, aspect_max=1.6,
+    fill_min=0.45, found_score=800,
+)
+
+# 粉色盘（11-15：高饱和粉大目标，投放容器）
+PINK_PLATE = ColorSpec(
+    name="pink_plate", hue_ranges=((135, 180),),
+    s_max=255, v_min=70,
+    area_min=1500, area_max=60000, aspect_min=0.5, aspect_max=2.5,
+    fill_min=0.30, found_score=2000,
 )
 
 
