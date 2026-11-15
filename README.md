@@ -72,6 +72,32 @@ multi-embodiment breadth. This repo owns a different, underserved layer:
 
 Full snapshot and interop path: [docs/landscape.md](docs/landscape.md).
 
+## Ecosystem
+
+An indie wave of robot-use harnesses is forming — different bodies, the same
+bet that a thin execution layer beats end-to-end policies. These are
+independent projects (not affiliated; listed for discovery). We link them so
+visitors can compare approaches; several link back.
+
+| Project | Angle | Complements this repo with |
+|---|---|---|
+| [showlab/Show-Harness](https://github.com/showlab/Show-Harness) | Semantic action units for VLMs | Franka/Piper/simulator breadth |
+| [Open-RUA/uni-robot-agent](https://github.com/Open-RUA/uni-robot-agent) | Unified robot-use agent runtime | Open-weight VLM tool loop across environments |
+| [HexaFuture/HexaShell](https://github.com/HexaFuture/HexaShell) | 14 general tools + SAM 3 | Four sim benchmarks, leaderboard scale |
+| [robot-agent-exploration/RAX](https://github.com/robot-agent-exploration/rax) | Coding-agent task exploration + skill compilation | Franka FR3 / Rainbow real-robot branches |
+| [xiao-yang25/robot-harness](https://github.com/xiao-yang25/robot-harness) | C++17 execution runtime, ROS 2 / Gazebo | Execution ownership & bounded recovery design |
+| [tensortron/robot-use](https://github.com/tensortron/robot-use) | Coding agents on bimanual SO-101 | MuJoCo preview + skill promotion workflow |
+| [stacx-lab/kinex](https://github.com/stacx-lab/kinex) | Coding agents → robots/simulators | Device/tool/skill layers on the Pi SDK |
+| [YidaYang/embodify](https://github.com/YidaYang/embodify) | MCP server for robot skills | LIBERO/RoboDojo backends for any MCP host |
+
+Hardware ecosystem: the SO-100/101 read-only adapter here speaks Feetech
+STS3215 / [LeRobot](https://github.com/huggingface/lerobot) joint semantics —
+built to give [SO-ARM100](https://github.com/TheRobotStudio/SO-ARM100) builders
+a safety-hardened execution option once that backend earns real-hardware
+evidence.
+
+Building a robot-use harness? PRs to this table are welcome.
+
 ## Architecture
 
 ![RoboHarness architecture](docs/assets/arch/architecture.jpg)
