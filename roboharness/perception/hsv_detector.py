@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
 import cv2
@@ -35,6 +35,7 @@ class ColorSpec:
     fill_min: float
     found_score: int  # >= 此分判 FOUND，之下判 UNCERTAIN
     v_max: int = 255   # 亮度上限（暗色目标用）
+    allow_border: bool = False  # 容器类大目标允许触边
 
     def mask(self, img_bgr: np.ndarray) -> np.ndarray:
         hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
@@ -51,10 +52,16 @@ WHITE_PLUG = ColorSpec(
     name="white_plug",
     hue_ranges=((0, 180),),
     s_max=90, v_min=130,
-    area_min=350, area_max=9000,
+    area_min=350, area_max=25000,  # 俯视近景实测插头约 1.6 万像素；远景仍由下限/分数约束
     aspect_min=0.3, aspect_max=4.5,
     fill_min=0.35,
     found_score=2500,
+)
+
+# 近距接触专用：本体可占满画面并触边；只在已有连续目标与低位几何门内使用
+CLOSE_WHITE_PLUG = replace(
+    WHITE_PLUG, name="white_plug_close", area_min=2000, area_max=60000,
+    allow_border=True,
 )
 
 # 红色方块（11-08 实战参数：双 H 区间 + 长宽比过滤反光条）
@@ -81,7 +88,7 @@ PINK_PLATE = ColorSpec(
     name="pink_plate", hue_ranges=((135, 180),),
     s_max=255, v_min=70,
     area_min=1500, area_max=60000, aspect_min=0.5, aspect_max=2.5,
-    fill_min=0.30, found_score=2000,
+    fill_min=0.30, found_score=2000, allow_border=True,
 )
 
 
@@ -108,8 +115,8 @@ def detect(img_bgr: np.ndarray, spec: ColorSpec, border: int = 5) -> Detection:
         x, y, w, h, area = stats[i]
         if not (spec.area_min <= area <= spec.area_max):
             continue
-        if x < border or y < border or x + w > w_img - border:
-            continue  # 贴边（眩光/边缘）剔除；底边允许（桌面物常贴底）
+        if not spec.allow_border and (x < border or y < border or x + w > w_img - border):
+            continue
         aspect = w / float(h)
         if not (spec.aspect_min <= aspect <= spec.aspect_max):
             continue

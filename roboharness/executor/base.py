@@ -7,6 +7,10 @@ from abc import ABC, abstractmethod
 from ..types import Primitive
 
 
+class UnsafeStateError(RuntimeError):
+    """跨后端安全熔断：上层必须停任务并携带证据叫人/换策略。"""
+
+
 class Executor(ABC):
     @abstractmethod
     def execute(self, primitive: Primitive) -> dict:
