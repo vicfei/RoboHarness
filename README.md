@@ -2,6 +2,10 @@
 
 [![CI](https://github.com/vicfei/RoboHarness/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vicfei/RoboHarness/actions/workflows/ci.yml)
 
+<p align="center">
+  <img src="docs/assets/hero/hero_banner.jpg" alt="RoboHarness hero — simulation twin on the left, real-hardware grasp evidence frames on the right. Regenerate with scripts/generate_hero_banner.py.">
+</p>
+
 **An incident-hardened harness for $200-class 5-DOF bus-servo arms: LLM agents
 plan, deterministic primitives act, a real-hardware safety layer owns every
 motion. Zero training.**
