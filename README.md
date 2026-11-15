@@ -6,6 +6,13 @@
   <img src="docs/assets/hero/hero_banner.jpg" alt="RoboHarness hero — real third-person photo of the arm holding the white plug aloft (with PyBullet twin inset), task-video filmstrip and status pills on the right. Regenerate with scripts/generate_hero_banner.py.">
 </p>
 
+<p align="center">
+  <video src="docs/assets/hero/arm_hold.mp4" width="720" controls muted loop></video>
+</p>
+
+<p align="center"><sub>13 s, real hardware, third-person view: descend → close → hold.
+The first fully-automatic closed-loop grasp (scan → center → grasp → verify), 2026-11-14.</sub></p>
+
 **An incident-hardened harness for $200-class 5-DOF bus-servo arms: LLM agents
 plan, deterministic primitives act, a real-hardware safety layer owns every
 motion. Zero training.**
@@ -130,6 +137,7 @@ python -m unittest discover -s tests -v   # 64/64 offline tests
 
 ## Docs
 
+- [POSTMORTEM.md](POSTMORTEM.md) — four real-robot incidents and the safety gates they shipped (the why behind this repo)
 - [docs/harness-design.md](docs/harness-design.md) — design v1 (three-tier brain, primitives, failure modes, M1–M4)
 - [docs/landscape.md](docs/landscape.md) — GitHub landscape snapshot, naming collision, and interop path
 - [docs/residual-rl-plan.md](docs/residual-rl-plan.md) — planned M1.7 bounded residual-RL pilot; harness keeps actuation and verification authority
