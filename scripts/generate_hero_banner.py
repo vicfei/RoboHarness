@@ -1,12 +1,14 @@
-"""Generate the RoboHarness homepage hero banner.
+"""Generate the RoboHarness homepage hero banner (v2, third-person real photo).
 
-Composition: a high-resolution PyBullet twin render (left) + copy and two real
-wrist-cam evidence frames from the first fully-automatic grasp (2026-11-14).
+v2 composition, after the user supplied D:\\RobotAssets\\video:
+- LEFT (main visual): the real third-person photo of the arm holding the
+  white plug aloft (arm_grasp.jpg, 2275x1279), green "REAL HARDWARE" framing.
+  A small PyBullet-twin render sits picture-in-picture (sim -> real story).
+- RIGHT: headline copy + status pills + a 3-frame filmstrip sampled from the
+  13s task video (descend -> close -> hold).
 
-Honesty rules baked in:
-- the real frames are the actual task camera (no staging, no stock photos);
-- status pills match the README claims (real-hw validated / 64/64 / zero
-  training); the grasp thumbnail caption says exactly what happened.
+Honesty rules: pills match README claims; captions say exactly what the
+media is; no staging.
 
 Usage:
     CREATEBLOCK_SIM_DIR=~/services/robotics/createblock-arm/sim \
@@ -27,8 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from generate_sim_gallery import (  # noqa: E402
-    add_box, camera_matrix, checker_texture, load_sim, make_plate,
-    project_point,
+    add_box, checker_texture, load_sim, make_plate,
 )
 
 W, H = 1600, 560
@@ -39,7 +40,6 @@ WHITE = (240, 246, 252)
 MUTED = (150, 165, 188)
 BODY = (200, 210, 226)
 GREEN = (96, 214, 140)
-AMBER = (242, 186, 84)
 
 FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
 F_KICK = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 17)
@@ -48,16 +48,20 @@ F_SUB = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 18)
 F_PILL = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 14)
 F_TAG = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 15)
 F_CAP = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 14)
-F_CHIP = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 14)
-F_HUD = ImageFont.truetype(str(FONT_DIR / "DejaVuSansMono.ttf"), 15)
+F_CHIP = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 13)
 
 
 def parse_args() -> argparse.Namespace:
     default_sim = Path.home() / "services/robotics/createblock-arm/sim"
-    default_caps = Path("/mnt/c/Users/chenfei/Desktop/arm_captures")
     parser = argparse.ArgumentParser()
     parser.add_argument("--sim-dir", type=Path, default=default_sim)
-    parser.add_argument("--captures-dir", type=Path, default=default_caps)
+    parser.add_argument(
+        "--photo", type=Path,
+        default=Path(__file__).resolve().parents[1] / "docs/assets/hero/src/arm_grasp.jpg")
+    parser.add_argument(
+        "--video-frames", type=Path, nargs="+",
+        default=[Path(__file__).resolve().parents[1] / f"docs/assets/hero/src/video_{t}.jpg"
+                 for t in ("descend", "close", "hold")])
     parser.add_argument("--out", type=Path,
                         default=Path(__file__).resolve().parents[1]
                         / "docs/assets/hero/hero_banner.jpg")
@@ -65,7 +69,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def render_twin(sim_dir: Path) -> np.ndarray:
-    """2x-supersampled render of the arm descending onto the white plug."""
+    """Small PyBullet twin render for the picture-in-picture inset."""
     arm = load_sim(sim_dir)
     with tempfile.TemporaryDirectory() as temp:
         texture = checker_texture(Path(temp) / "checker.png")
@@ -77,13 +81,12 @@ def render_twin(sim_dir: Path) -> np.ndarray:
     plug = add_box([0.160, 0.0, 0.024], [0.024] * 3,
                    (0.97, 0.96, 0.92, 1.0), mass=0.05)
     pybullet.changeVisualShape(plug, -1, rgbaColor=[0.97, 0.96, 0.92, 1.0])
-
     arm.home(); arm.wait()
-    arm.set_tool_pose([160, 0, 108], T=1.0); arm.wait()
-    arm.gripper_open(angle=np.pi / 3, T=0.6); arm.wait()
-    arm.set_tool_pose([160, 0, 68], T=0.8); arm.wait()
+    arm.set_tool_pose([160, 0, 108], T=0.9); arm.wait()
+    arm.gripper_open(angle=np.pi / 3, T=0.5); arm.wait()
+    arm.set_tool_pose([160, 0, 68], T=0.7); arm.wait()
 
-    w, h = 1760, 960
+    w, h = 640, 420
     view = pybullet.computeViewMatrixFromYawPitchRoll(
         cameraTargetPosition=[0.155, 0.0, 0.10], distance=0.58,
         yaw=52, pitch=-30, roll=0, upAxisIndex=2)
@@ -93,55 +96,23 @@ def render_twin(sim_dir: Path) -> np.ndarray:
         w, h, view, proj, renderer=pybullet.ER_TINY_RENDERER)
     frame = cv2.cvtColor(
         np.reshape(rgba, (h, w, 4))[:, :, :3], cv2.COLOR_RGB2BGR)
-
-    # HUD: corner brackets on the plug target.
-    aabb_min, aabb_max = pybullet.getAABB(plug)
-    corners = [(x, y, z)
-               for x in (aabb_min[0], aabb_max[0])
-               for y in (aabb_min[1], aabb_max[1])
-               for z in (aabb_min[2], aabb_max[2])]
-    pts = [project_point(c, view, proj, w, h) for c in corners]
-    x0, x1 = int(min(p[0] for p in pts)), int(max(p[0] for p in pts))
-    y0, y1 = int(min(p[1] for p in pts)), int(max(p[1] for p in pts))
-    arm_len = max(14, int(min(x1 - x0, y1 - y0) * 0.30))
-    for cx, cy, dx, dy in ((x0, y0, 1, 1), (x1, y0, -1, 1),
-                           (x0, y1, 1, -1), (x1, y1, -1, -1)):
-        cv2.line(frame, (cx, cy), (cx + dx * arm_len, cy), (36, 194, 236), 3)
-        cv2.line(frame, (cx, cy), (cx, cy + dy * arm_len), (36, 194, 236), 3)
-    # HUD status line
-    cv2.putText(frame, "scan_for OK  center_on OK", (36, 46),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.72, (150, 224, 176), 3, cv2.LINE_AA)
-    cv2.putText(frame, "grasp: contact-gated  z=68mm", (36, 78),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.72, (94, 196, 252), 3, cv2.LINE_AA)
-
+    cv2.putText(frame, "PyBullet twin", (18, 34),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.62, (36, 194, 236), 2, cv2.LINE_AA)
     pybullet.removeBody(plug)
     pybullet.removeBody(floor)
     arm.disconnect()
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 
-def paste_thumb(canvas: Image.Image, path: Path, x: int, y: int,
-                w: int, h: int, caption: str, d: ImageDraw.ImageDraw) -> None:
-    im = Image.open(path).convert("RGB")
-    # center-crop to the target aspect, then resize
+def crop_to_aspect(im: Image.Image, aspect: float) -> Image.Image:
     tw, th = im.size
-    target = w / h
-    if tw / th > target:
-        nw = int(th * target)
+    if tw / th > aspect:
+        nw = int(th * aspect)
         im = im.crop(((tw - nw) // 2, 0, (tw + nw) // 2, th))
     else:
-        nh = int(tw / target)
+        nh = int(tw / aspect)
         im = im.crop((0, (th - nh) // 2, tw, (th + nh) // 2))
-    im = im.resize((w, h), Image.LANCZOS)
-    # brighten and gamma-lift — the originals are night shots
-    arr = np.asarray(im).astype(np.float32) / 255.0
-    arr = np.clip(arr * 1.45 + 0.05, 0, 1) ** 0.9
-    im = Image.fromarray((arr * 255).astype(np.uint8))
-    canvas.paste(im, (x, y))
-    d.rectangle([x - 1, y - 1, x + w, y + h], outline=GREEN, width=2)
-    # caption strip inside the bottom
-    d.rectangle([x, y + h - 26, x + w, y + h], fill=(8, 12, 20))
-    d.text((x + 10, y + h - 21), caption, font=F_CAP, fill=BODY)
+    return im
 
 
 def pill(d: ImageDraw.ImageDraw, x: int, y: int, text: str, color) -> int:
@@ -156,32 +127,55 @@ def main() -> int:
     args = parse_args()
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
-    twin = render_twin(args.sim_dir)
-    twin_img = Image.fromarray(twin).resize((880, 480), Image.LANCZOS)
-
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
-    # subtle background grid
     for gx in range(40, W, 80):
         d.line([(gx, 20), (gx, H - 20)], fill=GRID, width=1)
     for gy in range(20, H, 80):
         d.line([(20, gy), (W - 20, gy)], fill=GRID, width=1)
 
-    # left: simulation panel
+    # ---------- left: real third-person photo ----------
     px, py, pw, ph = 40, 40, 880, 480
-    img.paste(twin_img, (px, py))
+    photo = Image.open(args.photo).convert("RGB")
+    # Tight crop around arm + wrist so the held plug reads clearly at
+    # GitHub width (judge verdict: full frame leaves the end-effector a
+    # dark smudge). Box chosen on the arm body/wrist region of arm_grasp.jpg.
+    photo = photo.crop((700, 120, 2275, 980))  # 1575x860 ~= panel aspect
+    photo = crop_to_aspect(photo, pw / ph).resize((pw, ph), Image.LANCZOS)
+    # gentle gamma/contrast lift — the wrist area is the darkest part
+    arr = np.asarray(photo).astype(np.float32) / 255.0
+    arr = np.clip((arr ** 0.82) * 1.04, 0, 1)
+    photo = Image.fromarray((arr * 255).astype(np.uint8))
+    img.paste(photo, (px, py))
     d.rectangle([px - 2, py - 2, px + pw + 1, py + ph + 1],
+                outline=GREEN, width=3)
+
+    # top-left tag on the photo
+    tag = "REAL HARDWARE - plug held aloft"
+    tw = int(d.textlength(tag, font=F_TAG)) + 24
+    d.rounded_rectangle([px + 14, py + 14, px + 14 + tw, py + 44],
+                        radius=14, fill=(8, 14, 12), outline=GREEN, width=2)
+    d.text((px + 26, py + 22), tag, font=F_TAG, fill=GREEN)
+
+    # picture-in-picture: sim twin inset, bottom-right
+    inset_w, inset_h = 264, 174
+    ix, iy = px + pw - inset_w - 16, py + ph - inset_h - 16
+    twin = Image.fromarray(render_twin(args.sim_dir)).resize(
+        (inset_w, inset_h), Image.LANCZOS)
+    img.paste(twin, (ix, iy))
+    d.rectangle([ix - 2, iy - 2, ix + inset_w + 1, iy + inset_h + 1],
                 outline=CYAN, width=2)
-    chip = "PyBullet twin | vendor STL/URDF | HEADLESS rehearsal"
-    cw = int(d.textlength(chip, font=F_CHIP)) + 24
-    d.rounded_rectangle([px + 14, py + ph - 44, px + 14 + cw, py + ph - 12],
-                        radius=12, fill=(8, 12, 20), outline=(48, 66, 96))
-    d.text((px + 26, py + ph - 37), chip, font=F_CHIP, fill=MUTED)
+    chip = "rehearsed in the twin first"
+    cw = int(d.textlength(chip, font=F_CHIP)) + 20
+    d.rounded_rectangle([ix, iy - 26, ix + cw, iy - 4],
+                        radius=11, fill=(8, 12, 20), outline=(48, 66, 96))
+    d.text((ix + 10, iy - 21), chip, font=F_CHIP, fill=MUTED)
 
-    # divider
-    d.line([(940, 40), (940, 520)], fill=(24, 34, 54), width=1)
+    # sim -> real link from inset to the held plug area (upper center of photo)
+    d.line([(px + pw - 16, iy - 40), (px + pw // 2 + 60, py + 120)],
+           fill=(96, 214, 140), width=2)
 
-    # right: copy column
+    # ---------- right: copy + filmstrip ----------
     cx = 972
     kicker = "INCIDENT-HARDENED ROBOT HARNESS"
     kx = cx
@@ -199,22 +193,19 @@ def main() -> int:
     px2 += pill(d, px2, 236, "64/64 offline tests", (150, 160, 175)) + 12
     pill(d, px2, 236, "zero training", CYAN)
 
-    d.text((cx, 296), "REAL HARDWARE - first automatic grasp, 2026-11-14",
+    d.text((cx, 296), "TASK VIDEO - descend, close, hold (13s, real camera)",
            font=F_TAG, fill=GREEN)
-    caps = args.captures_dir
-    paste_thumb(img, caps / "grasp_closed.jpg", cx, 324, 288, 196,
-                "close: plug in jaws", d)
-    paste_thumb(img, caps / "grasp_lifted.jpg", cx + 300, 324, 288, 196,
-                "lift: verified off-table", d)
-    # sim -> real narrative link across the divider
-    link_y = 422
-    lx = 946
-    while lx < cx - 8:
-        d.line([(lx, link_y), (min(lx + 8, cx - 10), link_y)],
-               fill=(96, 214, 140), width=2)
-        lx += 16
-    d.polygon([(cx - 4, link_y), (cx - 14, link_y - 5), (cx - 14, link_y + 5)],
-              fill=(96, 214, 140))
+    labels = ["descend", "close", "hold"]
+    fw, fh = 178, 196
+    for i, (frame_path, label) in enumerate(zip(args.video_frames, labels)):
+        fx = cx + i * (fw + 14)
+        fim = Image.open(frame_path).convert("RGB")
+        fim = crop_to_aspect(fim, fw / fh).resize((fw, fh), Image.LANCZOS)
+        img.paste(fim, (fx, 324))
+        d.rectangle([fx - 1, 324 - 1, fx + fw, 324 + fh],
+                    outline=(48, 66, 96), width=2)
+        d.rectangle([fx, 324 + fh - 24, fx + fw, 324 + fh], fill=(8, 12, 20))
+        d.text((fx + 8, 324 + fh - 19), label, font=F_CHIP, fill=BODY)
 
     img.save(str(args.out), quality=92)
     print("WROTE", args.out, img.size)
