@@ -62,17 +62,29 @@ Full snapshot and interop path: [docs/landscape.md](docs/landscape.md).
 
 ## Architecture
 
-```
-Cloud brain (1-3 calls/task)      Local harness (Python, ~300 MB)      Reflex (never LLM)
-DeepSeek / GLM / Kimi API   ──►   state machine · primitives ·      ──►  uServo joint commands
-task → primitive sequence         perception · verifier · evidence        + current watchdog
-```
+![RoboHarness architecture](docs/assets/arch/architecture.jpg)
+
+The pipeline in one line: **cloud LLM plans → discipline gate reviews → local
+harness closed-loops → safety executor owns every motion → backends.**
+
+| Layer | What lives there | Status |
+|---|---|---|
+| Cloud brain | DeepSeek / GLM / Kimi API, 1–3 calls per task, emits a primitive sequence | planned (M2) |
+| Discipline gate | `TaskSpec` (per-step expect/check/on-fail), `GoalVerifier`, `MACRO_BAN`, human plan review | offline-tested |
+| Local harness | `ClosedLoopTask` observe→reason→act→verify loop · deterministic primitives · three-state HSV perception · multi-pose ray triangulation · evidence log | real-hw validated (grasp locked) |
+| Safety executor | Current spike fuse, contextual current+motion feedback, z-clearance tiers 30/70/90/120 mm, Cartesian postconditions, contact/low-pose locks, adaptive `prepare()` | real-hw validated |
+| Backends | CreateBlock active behind task gates; SO-100/101 state-read adapter with motion locked | capability matrix |
+| Sim twin + runtimes | PyBullet rehearsal (vendor STL/URDF), SSH/Local code runners; residual RL stays a bounded optional plugin | working / planned |
 
 Four deterministic primitives anchor the loop:
 `scan_for` (multi-stance sweep, hardware-proven) ·
 `center_on` (sign-probe visual servoing, proven for observation alignment) ·
 `grasp` (evidence-gated close, currently locked pending jaw-contact calibration) ·
 `release`.
+
+Diagram regenerable with `python scripts/generate_architecture_diagram.py`;
+status colors are the honesty contract (green = real-hardware validated,
+amber = locked, dashed = planned).
 
 Swap executors, not code: `SSHCodeRunner` (laptop→arm link, validated) and
 `LocalCodeRunner` (harness resident on the Jetson) behind one interface. SO-100/101
