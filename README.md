@@ -7,11 +7,12 @@
 </p>
 
 <p align="center">
-  <video src="docs/assets/hero/arm_hold.mp4" width="720" controls muted loop></video>
+  <img src="docs/assets/hero/arm_hold.gif" alt="13 s real-hardware grasp: descend, close, hold. Third-person view, the first fully-automatic closed-loop grasp (2026-11-14). Full-quality mp4 in docs/assets/hero/arm_hold.mp4" width="360">
 </p>
 
 <p align="center"><sub>13 s, real hardware, third-person view: descend → close → hold.
-The first fully-automatic closed-loop grasp (scan → center → grasp → verify), 2026-11-14.</sub></p>
+The first fully-automatic closed-loop grasp (scan → center → grasp → verify), 2026-11-14.
+Full-quality clip: <a href="docs/assets/hero/arm_hold.mp4">arm_hold.mp4</a></sub></p>
 
 **An incident-hardened harness for $200-class 5-DOF bus-servo arms: LLM agents
 plan, deterministic primitives act, a real-hardware safety layer owns every
