@@ -1,6 +1,7 @@
 # RoboHarness — Design v1 (2026-11-14)
 
-> Inherits the Robot Use Agent route (RobotAgent docs/06) and the real-hardware
+> Inherits the Robot Use Agent route (AgenticRobot docs/06, renamed from
+> RobotAgent 2026-11-16) and the real-hardware
 > safety spec hardened on 2026-11-14 (see the Chinese integration log for the
 > incident chain that produced it). This is the English design baseline.
 
