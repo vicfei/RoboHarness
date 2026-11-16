@@ -47,6 +47,7 @@ F_HEAD = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 37)
 F_SUB = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 18)
 F_PILL = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 14)
 F_TAG = ImageFont.truetype(str(FONT_DIR / "DejaVuSans-Bold.ttf"), 15)
+F_BODY = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 16)
 F_CAP = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 14)
 F_CHIP = ImageFont.truetype(str(FONT_DIR / "DejaVuSans.ttf"), 13)
 
@@ -193,19 +194,22 @@ def main() -> int:
     px2 += pill(d, px2, 236, "64/64 offline tests", (150, 160, 175)) + 12
     pill(d, px2, 236, "zero training", CYAN)
 
-    d.text((cx, 296), "TASK VIDEO - descend, close, hold (13s, real camera)",
+    d.text((cx, 292), "FOUR REAL INCIDENTS  ->  FOUR GATES",
            font=F_TAG, fill=GREEN)
-    labels = ["descend", "close", "hold"]
-    fw, fh = 178, 196
-    for i, (frame_path, label) in enumerate(zip(args.video_frames, labels)):
-        fx = cx + i * (fw + 14)
-        fim = Image.open(frame_path).convert("RGB")
-        fim = crop_to_aspect(fim, fw / fh).resize((fw, fh), Image.LANCZOS)
-        img.paste(fim, (fx, 324))
-        d.rectangle([fx - 1, 324 - 1, fx + fw, 324 + fh],
-                    outline=(48, 66, 96), width=2)
-        d.rectangle([fx, 324 + fh - 24, fx + fw, 324 + fh], fill=(8, 12, 20))
-        d.text((fx + 8, 324 + fh - 19), label, font=F_CHIP, fill=BODY)
+    incident_rows = [
+        ("vendor macro flung the plug", "MACRO_BAN"),
+        ("+5 mm lift went -7.5 mm", "low-pose IK lock"),
+        ("async recovery descended", "recovery disabled"),
+        ("grasp closed on nothing", "evidence standard"),
+    ]
+    row_y = 330
+    for left, right in incident_rows:
+        d.text((cx, row_y), left, font=F_BODY, fill=BODY)
+        arrow_text = "-> " + right
+        d.text((cx + 300, row_y), arrow_text, font=F_BODY, fill=GREEN)
+        row_y += 38
+    d.text((cx, row_y + 10), "full postmortem with numbers in the repo",
+           font=F_BODY, fill=MUTED)
 
     img.save(str(args.out), quality=92)
     print("WROTE", args.out, img.size)

@@ -111,8 +111,9 @@ from grip angle + current alone when the object is small.
 - Grasp evidence standard: grip angle + close-current peak + jaw-region
   vision before/after comparison; anything less reports "unverified", never
   "success".
-- The 2026-11-14 fully-automatic grasp (see the homepage video) passed this
-  standard; the plug-to-plate task remains open until M1.5 lands and contact
+- The 2026-11-14 fully-automatic grasp passed this standard (third-person video
+  preserved at [docs/assets/hero/arm_hold.mp4](docs/assets/hero/arm_hold.mp4));
+  the plug-to-plate task remains open until M1.5 lands and contact
   approaches are re-enabled on evidence.
 
 **Status:** locked by design; the honest status is "grasp works, transport

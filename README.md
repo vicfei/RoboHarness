@@ -3,16 +3,8 @@
 [![CI](https://github.com/vicfei/RoboHarness/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vicfei/RoboHarness/actions/workflows/ci.yml)
 
 <p align="center">
-  <img src="docs/assets/hero/hero_banner.jpg" alt="RoboHarness hero — real third-person photo of the arm holding the white plug aloft (with PyBullet twin inset), task-video filmstrip and status pills on the right. Regenerate with scripts/generate_hero_banner.py.">
+  <img src="docs/assets/hero/hero_banner.jpg" alt="RoboHarness hero — real third-person photo of the arm holding the white plug aloft (with PyBullet twin inset), headline and four real incidents mapped to four safety gates on the right. Regenerate with scripts/generate_hero_banner.py.">
 </p>
-
-<p align="center">
-  <img src="docs/assets/hero/arm_hold.gif" alt="13 s real-hardware grasp: descend, close, hold. Third-person view, the first fully-automatic closed-loop grasp (2026-11-14). Full-quality mp4 in docs/assets/hero/arm_hold.mp4" width="360">
-</p>
-
-<p align="center"><sub>13 s, real hardware, third-person view: descend → close → hold.
-The first fully-automatic closed-loop grasp (scan → center → grasp → verify), 2026-11-14.
-Full-quality clip: <a href="docs/assets/hero/arm_hold.mp4">arm_hold.mp4</a></sub></p>
 
 **An incident-hardened harness for $200-class 5-DOF bus-servo arms: LLM agents
 plan, deterministic primitives act, a real-hardware safety layer owns every
